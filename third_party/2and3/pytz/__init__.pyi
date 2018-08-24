@@ -39,3 +39,8 @@ class _StaticTzInfo(_BaseTzInfo):
 
 
 def timezone(zone: str) -> _BaseTzInfo: ...
+
+class _FixedOffset(datetime.tzinfo):
+    pass
+
+def FixedOffset(minutes: int) -> datetime.tzinfo: ...
