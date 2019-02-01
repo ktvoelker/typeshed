@@ -1,6 +1,6 @@
 # Stubs for zipfile
 
-from typing import Callable, IO, Iterable, List, Optional, Text, Tuple, Type, Union
+from typing import Callable, Dict, IO, Iterable, List, Optional, Text, Tuple, Type, Union
 from types import TracebackType
 import os
 import sys
@@ -27,6 +27,8 @@ class ZipFile:
     debug = ...  # type: int
     comment = ...  # type: bytes
     filelist = ...  # type: List[ZipInfo]
+    fp = ...  # type: IO[bytes]
+    NameToInfo = ...  # type: Dict[Text, ZipInfo]
     def __init__(self, file: Union[_Path, IO[bytes]], mode: Text = ..., compression: int = ...,
                  allowZip64: bool = ...) -> None: ...
     def __enter__(self) -> ZipFile: ...
@@ -57,8 +59,6 @@ class ZipFile:
         def writestr(self,
                      zinfo_or_arcname: _SZI, bytes: bytes,
                      compress_type: Optional[int] = ...) -> None: ...
-    if sys.version_info >= (3, 6):
-        def is_dir(self) -> bool: ...
 
 class PyZipFile(ZipFile):
     if sys.version_info >= (3,):
@@ -89,9 +89,11 @@ class ZipInfo:
     CRC = ...  # type: int
     compress_size = ...  # type: int
     file_size = ...  # type: int
-    if sys.version_info < (3,):
-        def __init__(self, filename: Optional[Text] = ...,
-                     date_time: Optional[_DT] = ...) -> None: ...
+    def __init__(self, filename: Optional[Text] = ...,
+                 date_time: Optional[_DT] = ...) -> None: ...
+    if sys.version_info >= (3, 6):
+        def is_dir(self) -> bool: ...
+    def FileHeader(self, zip64: Optional[bool] = ...) -> bytes: ...
 
 
 def is_zipfile(filename: Union[_Path, IO[bytes]]) -> bool: ...

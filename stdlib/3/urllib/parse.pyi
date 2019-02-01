@@ -1,5 +1,5 @@
 # Stubs for urllib.parse
-from typing import Any, List, Dict, Tuple, AnyStr, Generic, overload, Sequence, Mapping, Union, NamedTuple, Callable
+from typing import Any, List, Dict, Tuple, AnyStr, Generic, overload, Sequence, Mapping, Union, NamedTuple, Callable, Optional
 import sys
 
 _Str = Union[bytes, str]
@@ -33,8 +33,7 @@ class _NetlocResultMixinBase(Generic[AnyStr]):
 
 class _NetlocResultMixinStr(_NetlocResultMixinBase[str], _ResultMixinStr): ...
 
-
-class _NetlocResultMixinBytes(_NetlocResultMixinBase[str], _ResultMixinBytes): ...
+class _NetlocResultMixinBytes(_NetlocResultMixinBase[bytes], _ResultMixinBytes): ...
 
 class _DefragResultBase(tuple, Generic[AnyStr]):
     url = ...  # type: AnyStr
@@ -124,7 +123,7 @@ else:
                                Sequence[Tuple[Any, Sequence[Any]]]],
                   doseq: bool = ..., safe: AnyStr = ..., encoding: str = ..., errors: str = ...) -> str: ...
 
-def urljoin(base: AnyStr, url: AnyStr, allow_fragments: bool = ...) -> AnyStr: ...
+def urljoin(base: AnyStr, url: Optional[AnyStr], allow_fragments: bool = ...) -> AnyStr: ...
 
 @overload
 def urlparse(url: str, scheme: str = ..., allow_fragments: bool = ...) -> ParseResult: ...

@@ -18,7 +18,9 @@ _converter = Callable[[str], Any]
 _converters = Dict[str, _converter]
 _T = TypeVar('_T')
 
-if sys.version_info >= (3, 6):
+if sys.version_info >= (3, 7):
+    _Path = Union[str, bytes, PathLike[str]]
+elif sys.version_info >= (3, 6):
     _Path = Union[str, PathLike[str]]
 else:
     _Path = str
@@ -92,15 +94,11 @@ class RawConfigParser(_parser):
 
     def read(self, filenames: Union[_Path, Iterable[_Path]],
              encoding: Optional[str] = ...) -> List[str]: ...
-
-    def readfp(self, fp: IO[str], filename: Optional[str] = ...) -> None: ...
-
     def read_file(self, f: Iterable[str], source: Optional[str] = ...) -> None: ...
-
     def read_string(self, string: str, source: str = ...) -> None: ...
-
     def read_dict(self, dictionary: Mapping[str, Mapping[str, Any]],
                   source: str = ...) -> None: ...
+    def readfp(self, fp: Iterable[str], filename: Optional[str] = ...) -> None: ...
 
     # These get* methods are partially applied (with the same names) in
     # SectionProxy; the stubs should be kept updated together
@@ -138,7 +136,7 @@ class RawConfigParser(_parser):
 class ConfigParser(RawConfigParser):
     def __init__(self,
                  defaults: Optional[_section] = ...,
-                 dict_type: Mapping[str, str] = ...,
+                 dict_type: Type[Mapping[str, str]] = ...,
                  allow_no_value: bool = ...,
                  delimiters: Sequence[str] = ...,
                  comment_prefixes: Sequence[str] = ...,

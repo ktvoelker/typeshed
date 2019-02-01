@@ -6,7 +6,7 @@ from typing import (
 )
 from string import Template
 from time import struct_time
-from types import TracebackType
+from types import TracebackType, FrameType
 import sys
 import threading
 
@@ -16,11 +16,18 @@ if sys.version_info >= (3, 5):
     _ExcInfoType = Union[None, bool, _SysExcInfoType, BaseException]
 else:
     _ExcInfoType = Union[None, bool, _SysExcInfoType]
-_ArgsType = Union[Tuple[Any, ...], Dict[str, Any]]
+_ArgsType = Union[Tuple[Any, ...], Mapping[str, Any]]
 _FilterType = Union[Filter, Callable[[LogRecord], int]]
 _Level = Union[int, Text]
+if sys.version_info >= (3, 6):
+    from os import PathLike
+    _Path = Union[str, PathLike[str]]
+else:
+    _Path = str
 
 raiseExceptions: bool
+
+def currentframe() -> FrameType: ...
 
 if sys.version_info >= (3,):
     _levelToName = ...  # type: Dict[int, str]
@@ -66,6 +73,7 @@ class Logger(Filterer):
         def critical(self, msg: Any, *args: Any, exc_info: _ExcInfoType = ...,
                      stack_info: bool = ..., extra: Optional[Dict[str, Any]] = ...,
                      **kwargs: Any) -> None: ...
+        fatal = critical
         def log(self, lvl: int, msg: Any, *args: Any, exc_info: _ExcInfoType = ...,
                 stack_info: bool = ..., extra: Optional[Dict[str, Any]] = ...,
                 **kwargs: Any) -> None: ...
@@ -82,15 +90,14 @@ class Logger(Filterer):
         def warning(self,
                     msg: Any, *args: Any, exc_info: _ExcInfoType = ...,
                     extra: Optional[Dict[str, Any]] = ..., **kwargs: Any) -> None: ...
-        def warn(self,
-                 msg: Any, *args: Any, exc_info: _ExcInfoType = ...,
-                 extra: Optional[Dict[str, Any]] = ..., **kwargs: Any) -> None: ...
+        warn = warning
         def error(self,
                   msg: Any, *args: Any, exc_info: _ExcInfoType = ...,
                   extra: Optional[Dict[str, Any]] = ..., **kwargs: Any) -> None: ...
         def critical(self,
                      msg: Any, *args: Any, exc_info: _ExcInfoType = ...,
                      extra: Optional[Dict[str, Any]] = ..., **kwargs: Any) -> None: ...
+        fatal = critical
         def log(self,
                 lvl: int, msg: Any, *args: Any, exc_info: _ExcInfoType = ...,
                 extra: Optional[Dict[str, Any]] = ..., **kwargs: Any) -> None: ...
@@ -109,7 +116,7 @@ class Logger(Filterer):
     def handle(self, record: LogRecord) -> None: ...
     if sys.version_info >= (3,):
         def makeRecord(self, name: str, lvl: int, fn: str, lno: int, msg: Any,
-                       args: Mapping[str, Any],
+                       args: _ArgsType,
                        exc_info: Optional[_SysExcInfoType],
                        func: Optional[str] = ...,
                        extra: Optional[Mapping[str, Any]] = ...,
@@ -117,7 +124,7 @@ class Logger(Filterer):
     else:
         def makeRecord(self,
                        name: str, lvl: int, fn: str, lno: int, msg: Any,
-                       args: Mapping[str, Any],
+                       args: _ArgsType,
                        exc_info: Optional[_SysExcInfoType],
                        func: Optional[str] = ...,
                        extra: Optional[Mapping[str, Any]] = ...) -> LogRecord: ...
@@ -125,20 +132,21 @@ class Logger(Filterer):
         def hasHandlers(self) -> bool: ...
 
 
-CRITICAL = ...  # type: int
-FATAL = ...  # type: int
-ERROR = ...  # type: int
-WARNING = ...  # type: int
-WARN = ...  # type: int
-INFO = ...  # type: int
-DEBUG = ...  # type: int
-NOTSET = ...  # type: int
+CRITICAL: int
+FATAL: int
+ERROR: int
+WARNING: int
+WARN: int
+INFO: int
+DEBUG: int
+NOTSET: int
 
 
 class Handler(Filterer):
-    level = ...  # type: int
-    formatter = ...  # type: Optional[Formatter]
-    lock = ...  # type: Optional[threading.Lock]
+    level: int  # undocumented
+    formatter: Optional[Formatter]  # undocumented
+    lock: Optional[threading.Lock]  # undocumented
+    name: Optional[str]  # undocumented
     def __init__(self, level: _Level = ...) -> None: ...
     def createLock(self) -> None: ...
     def acquire(self) -> None: ...
@@ -167,12 +175,12 @@ class Formatter:
 
     if sys.version_info >= (3,):
         def __init__(self, fmt: Optional[str] = ...,
-                     datefmt: Optional[str] =...,
+                     datefmt: Optional[str] = ...,
                      style: str = ...) -> None: ...
     else:
         def __init__(self,
                      fmt: Optional[str] = ...,
-                     datefmt: Optional[str] =...) -> None: ...
+                     datefmt: Optional[str] = ...) -> None: ...
 
     def format(self, record: LogRecord) -> str: ...
     def formatTime(self, record: LogRecord, datefmt: str = ...) -> str: ...
@@ -191,6 +199,7 @@ class LogRecord:
     asctime = ...  # type: str
     created = ...  # type: int
     exc_info = ...  # type: Optional[_SysExcInfoType]
+    exc_text = ...  # type: Optional[str]
     filename = ...  # type: str
     funcName = ...  # type: str
     levelname = ...  # type: str
@@ -225,6 +234,8 @@ class LogRecord:
 
 
 class LoggerAdapter:
+    logger: Logger
+    extra: Mapping[str, Any]
     def __init__(self, logger: Logger, extra: Mapping[str, Any]) -> None: ...
     def process(self, msg: Any, kwargs: MutableMapping[str, Any]) -> Tuple[Any, MutableMapping[str, Any]]: ...
     if sys.version_info >= (3,):
@@ -237,6 +248,9 @@ class LoggerAdapter:
         def warning(self, msg: Any, *args: Any, exc_info: _ExcInfoType = ...,
                     stack_info: bool = ..., extra: Optional[Dict[str, Any]] = ...,
                     **kwargs: Any) -> None: ...
+        def warn(self, msg: Any, *args: Any, exc_info: _ExcInfoType = ...,
+                 stack_info: bool = ..., extra: Optional[Dict[str, Any]] = ...,
+                 **kwargs: Any) -> None: ...
         def error(self, msg: Any, *args: Any, exc_info: _ExcInfoType = ...,
                   stack_info: bool = ..., extra: Optional[Dict[str, Any]] = ...,
                   **kwargs: Any) -> None: ...
@@ -246,7 +260,7 @@ class LoggerAdapter:
         def critical(self, msg: Any, *args: Any, exc_info: _ExcInfoType = ...,
                      stack_info: bool = ..., extra: Optional[Dict[str, Any]] = ...,
                      **kwargs: Any) -> None: ...
-        def log(self, lvl: int, msg: Any, *args: Any, exc_info: _ExcInfoType = ...,
+        def log(self, level: int, msg: Any, *args: Any, exc_info: _ExcInfoType = ...,
                 stack_info: bool = ..., extra: Optional[Dict[str, Any]] = ...,
                 **kwargs: Any) -> None: ...
     else:
@@ -269,7 +283,7 @@ class LoggerAdapter:
                      msg: Any, *args: Any, exc_info: _ExcInfoType = ...,
                      extra: Optional[Dict[str, Any]] = ..., **kwargs: Any) -> None: ...
         def log(self,
-                lvl: int, msg: Any, *args: Any, exc_info: _ExcInfoType = ...,
+                level: int, msg: Any, *args: Any, exc_info: _ExcInfoType = ...,
                 extra: Optional[Dict[str, Any]] = ..., **kwargs: Any) -> None: ...
     def isEnabledFor(self, lvl: int) -> bool: ...
     if sys.version_info >= (3,):
@@ -321,8 +335,7 @@ else:
              extra: Optional[Dict[str, Any]] = ..., **kwargs: Any) -> None: ...
     def warning(msg: Any, *args: Any, exc_info: _ExcInfoType = ...,
                 extra: Optional[Dict[str, Any]] = ..., **kwargs: Any) -> None: ...
-    def warn(msg: Any, *args: Any, exc_info: _ExcInfoType = ...,
-             extra: Optional[Dict[str, Any]] = ..., **kwargs: Any) -> None: ...
+    warn = warning
     def error(msg: Any, *args: Any, exc_info: _ExcInfoType = ...,
               extra: Optional[Dict[str, Any]] = ..., **kwargs: Any) -> None: ...
     def critical(msg: Any, *args: Any, exc_info: _ExcInfoType = ...,
@@ -335,12 +348,12 @@ fatal = critical
 
 def disable(lvl: int) -> None: ...
 def addLevelName(lvl: int, levelName: str) -> None: ...
-def getLevelName(lvl: int) -> str: ...
+def getLevelName(lvl: Union[int, str]) -> Any: ...
 
 def makeLogRecord(attrdict: Mapping[str, Any]) -> LogRecord: ...
 
 if sys.version_info >= (3,):
-    def basicConfig(*, filename: str = ..., filemode: str = ...,
+    def basicConfig(*, filename: _Path = ..., filemode: str = ...,
                     format: str = ..., datefmt: str = ..., style: str = ...,
                     level: _Level = ..., stream: IO[str] = ...,
                     handlers: Iterable[Handler] = ...) -> None: ...
@@ -377,7 +390,7 @@ class FileHandler(Handler):
     mode = ...  # type: str
     encoding = ...  # type: Optional[str]
     delay = ...  # type: bool
-    def __init__(self, filename: str, mode: str = ...,
+    def __init__(self, filename: _Path, mode: str = ...,
                  encoding: Optional[str] = ..., delay: bool = ...) -> None: ...
 
 

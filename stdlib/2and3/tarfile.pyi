@@ -39,15 +39,15 @@ if sys.version_info < (3,):
     TAR_GZIPPED = ...  # type: int
 
 def open(name: Optional[_Path] = ..., mode: str = ...,
-        fileobj: Optional[IO[bytes]] = ..., bufsize: int = ...,
-        *, format: Optional[int] = ..., tarinfo: Optional[TarInfo] = ...,
-        dereference: Optional[bool] = ...,
-        ignore_zeros: Optional[bool] = ...,
-        encoding: Optional[str] = ..., errors: str = ...,
-        pax_headers: Optional[Mapping[str, str]] = ...,
-        debug: Optional[int] = ...,
-        errorlevel: Optional[int] = ...,
-        compresslevel: Optional[int] = ...) -> TarFile: ...
+         fileobj: Optional[IO[bytes]] = ..., bufsize: int = ...,
+         *, format: Optional[int] = ..., tarinfo: Optional[TarInfo] = ...,
+         dereference: Optional[bool] = ...,
+         ignore_zeros: Optional[bool] = ...,
+         encoding: Optional[str] = ..., errors: str = ...,
+         pax_headers: Optional[Mapping[str, str]] = ...,
+         debug: Optional[int] = ...,
+         errorlevel: Optional[int] = ...,
+         compresslevel: Optional[int] = ...) -> TarFile: ...
 
 
 class TarFile(Iterable[TarInfo]):
@@ -78,7 +78,7 @@ class TarFile(Iterable[TarInfo]):
     def __enter__(self) -> TarFile: ...
     def __exit__(self,
                  exc_type: Optional[Type[BaseException]],
-                 exc_val: Optional[Exception],
+                 exc_val: Optional[BaseException],
                  exc_tb: Optional[TracebackType]) -> bool: ...
     def __iter__(self) -> Iterator[TarInfo]: ...
     @classmethod

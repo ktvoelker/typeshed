@@ -10,20 +10,32 @@ if sys.version_info >= (3,):
     from queue import Queue
 else:
     from Queue import Queue
+
 # TODO update socket stubs to add SocketKind
 _SocketKind = int
+if sys.version_info >= (3, 6):
+    from os import PathLike
+    _Path = Union[str, PathLike[str]]
+else:
+    _Path = str
 
+DEFAULT_TCP_LOGGING_PORT: int
+DEFAULT_UDP_LOGGING_PORT: int
+DEFAULT_HTTP_LOGGING_PORT: int
+DEFAULT_SOAP_LOGGING_PORT: int
+SYSLOG_UDP_PORT: int
+SYSLOG_TCP_PORT: int
 
 class WatchedFileHandler(Handler):
     @overload
-    def __init__(self, filename: str) -> None: ...
+    def __init__(self, filename: _Path) -> None: ...
     @overload
-    def __init__(self, filename: str, mode: str) -> None: ...
+    def __init__(self, filename: _Path, mode: str) -> None: ...
     @overload
-    def __init__(self, filename: str, mode: str,
+    def __init__(self, filename: _Path, mode: str,
                  encoding: Optional[str]) -> None: ...
     @overload
-    def __init__(self, filename: str, mode: str, encoding: Optional[str],
+    def __init__(self, filename: _Path, mode: str, encoding: Optional[str],
                  delay: bool) -> None: ...
 
 
@@ -32,7 +44,7 @@ if sys.version_info >= (3,):
         terminator = ...  # type: str
         namer = ...  # type: Optional[Callable[[str], str]]
         rotator = ...  # type: Optional[Callable[[str, str], None]]
-        def __init__(self, filename: str, mode: str,
+        def __init__(self, filename: _Path, mode: str,
                      encoding: Optional[str] = ...,
                      delay: bool = ...) -> None: ...
         def rotation_filename(self, default_name: str) -> None: ...
@@ -41,7 +53,7 @@ if sys.version_info >= (3,):
 
 if sys.version_info >= (3,):
     class RotatingFileHandler(BaseRotatingHandler):
-        def __init__(self, filename: str, mode: str = ..., maxBytes: int = ...,
+        def __init__(self, filename: _Path, mode: str = ..., maxBytes: int = ...,
                      backupCount: int = ..., encoding: Optional[str] = ...,
                      delay: bool = ...) -> None: ...
         def doRollover(self) -> None: ...
@@ -56,7 +68,7 @@ else:
 if sys.version_info >= (3,):
     class TimedRotatingFileHandler(BaseRotatingHandler):
         if sys.version_info >= (3, 4):
-            def __init__(self, filename: str, when: str = ...,
+            def __init__(self, filename: _Path, when: str = ...,
                          interval: int = ...,
                          backupCount: int = ..., encoding: Optional[str] = ...,
                          delay: bool = ..., utc: bool = ...,
@@ -68,7 +80,7 @@ if sys.version_info >= (3,):
                          delay: bool = ..., utc: bool = ...) -> None: ...
         def doRollover(self) -> None: ...
 else:
-    class TimedRotatingFileHandler:
+    class TimedRotatingFileHandler(Handler):
         def __init__(self,
                      filename: str, when: str = ..., interval: int = ...,
                      backupCount: int = ..., encoding: Optional[str] = ...,
@@ -123,10 +135,10 @@ class SysLogHandler(Handler):
     LOG_LOCAL6 = ...  # type: int
     LOG_LOCAL7 = ...  # type: int
     def __init__(self, address: Union[Tuple[str, int], str] = ...,
-            facility: int = ..., socktype: _SocketKind = ...) -> None: ...
+                 facility: int = ..., socktype: _SocketKind = ...) -> None: ...
     def encodePriority(self, facility: Union[int, str],
                        priority: Union[int, str]) -> int: ...
-    def mapPriority(self, levelName: int) -> str: ...
+    def mapPriority(self, levelName: str) -> str: ...
 
 
 class NTEventLogHandler(Handler):
@@ -144,14 +156,14 @@ class SMTPHandler(Handler):
         def __init__(self, mailhost: Union[str, Tuple[str, int]], fromaddr: str,
                      toaddrs: List[str], subject: str,
                      credentials: Optional[Tuple[str, str]] = ...,
-                     secure: Union[Tuple[str], Tuple[str, str], None] =...,
+                     secure: Union[Tuple[str], Tuple[str, str], None] = ...,
                      timeout: float = ...) -> None: ...
     else:
         def __init__(self,
                      mailhost: Union[str, Tuple[str, int]], fromaddr: str,
                      toaddrs: List[str], subject: str,
                      credentials: Optional[Tuple[str, str]] = ...,
-                     secure: Union[Tuple[str], Tuple[str, str], None] =...) -> None: ...
+                     secure: Union[Tuple[str], Tuple[str, str], None] = ...) -> None: ...
     def getSubject(self, record: LogRecord) -> str: ...
 
 
@@ -161,7 +173,7 @@ class BufferingHandler(Handler):
 
 class MemoryHandler(BufferingHandler):
     def __init__(self, capacity: int, flushLevel: int = ...,
-                 target: Optional[Handler] =...) -> None: ...
+                 target: Optional[Handler] = ...) -> None: ...
     def setTarget(self, target: Handler) -> None: ...
 
 
