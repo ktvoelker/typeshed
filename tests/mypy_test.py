@@ -88,7 +88,7 @@ def main():
         print("Cannot import mypy. Did you install it?")
         sys.exit(1)
 
-    versions = [(3, 7), (3, 6), (3, 5), (3, 4), (2, 7)]
+    versions = [(3, 8), (3, 7), (3, 6), (3, 5), (2, 7)]
     if args.python_version:
         versions = [v for v in versions
                     if any(('%d.%d' % v).startswith(av) for av in args.python_version)]
@@ -141,7 +141,7 @@ def main():
                 print("running mypy", ' '.join(flags), "# with", len(files), "files")
             try:
                 if not args.dry_run:
-                    mypy_main('')
+                    mypy_main('', sys.stdout, sys.stderr)
             except SystemExit as err:
                 code = max(code, err.code)
     if code:

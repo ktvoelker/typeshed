@@ -5,7 +5,7 @@ from datetime import datetime
 _T = TypeVar('_T')
 _KT = TypeVar('_KT')
 _VT = TypeVar('_VT')
-_MT = TypeVar('_MT', bound='MapAttribute')
+_MT = TypeVar('_MT', bound=MapAttribute)
 
 class Attribute(Generic[_T]):
     attr_name: Optional[Text]
@@ -73,7 +73,7 @@ class NullAttribute(Attribute[None]):
     def __get__(self, instance: Any, owner: Any) -> None: ...
 
 class MapAttributeMeta(type):
-    def __init__(cls, name, bases, attrs) -> None: ...
+    def __init__(self, name, bases, attrs) -> None: ...
 
 class MapAttribute(Generic[_KT, _VT], Attribute[Mapping[_KT, _VT]], metaclass=MapAttributeMeta):
     attribute_values: Any

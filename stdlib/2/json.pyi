@@ -1,4 +1,4 @@
-from typing import Any, IO, Optional, Tuple, Callable, Dict, List, Union, Text
+from typing import Any, IO, Optional, Tuple, Callable, Dict, List, Union, Text, Protocol, Type
 
 class JSONDecodeError(ValueError):
     def dumps(self, obj: Any) -> str: ...
@@ -11,7 +11,7 @@ def dumps(obj: Any,
           ensure_ascii: bool = ...,
           check_circular: bool = ...,
           allow_nan: bool = ...,
-          cls: Any = ...,
+          cls: Optional[Type[JSONEncoder]] = ...,
           indent: Optional[int] = ...,
           separators: Optional[Tuple[str, str]] = ...,
           encoding: str = ...,
@@ -25,7 +25,7 @@ def dump(obj: Any,
          ensure_ascii: bool = ...,
          check_circular: bool = ...,
          allow_nan: bool = ...,
-         cls: Any = ...,
+         cls: Optional[Type[JSONEncoder]] = ...,
          indent: Optional[int] = ...,
          separators: Optional[Tuple[str, str]] = ...,
          encoding: str = ...,
@@ -35,7 +35,7 @@ def dump(obj: Any,
 
 def loads(s: Union[Text, bytes],
           encoding: Any = ...,
-          cls: Any = ...,
+          cls: Optional[Type[JSONDecoder]] = ...,
           object_hook: Optional[Callable[[Dict], Any]] = ...,
           parse_float: Optional[Callable[[str], Any]] = ...,
           parse_int: Optional[Callable[[str], Any]] = ...,
@@ -43,9 +43,12 @@ def loads(s: Union[Text, bytes],
           object_pairs_hook: Optional[Callable[[List[Tuple[Any, Any]]], Any]] = ...,
           **kwds: Any) -> Any: ...
 
-def load(fp: IO[str],
+class _Reader(Protocol):
+    def read(self) -> Union[Text, bytes]: ...
+
+def load(fp: _Reader,
          encoding: Optional[str] = ...,
-         cls: Any = ...,
+         cls: Optional[Type[JSONDecoder]] = ...,
          object_hook: Optional[Callable[[Dict], Any]] = ...,
          parse_float: Optional[Callable[[str], Any]] = ...,
          parse_int: Optional[Callable[[str], Any]] = ...,
@@ -66,14 +69,14 @@ class JSONDecoder(object):
     def raw_decode(self, s: Union[Text, bytes], idx: int = ...) -> Tuple[Any, Any]: ...
 
 class JSONEncoder(object):
-    item_separator = ...  # type: str
-    key_separator = ...  # type: str
-    skipkeys = ...  # type: bool
-    ensure_ascii = ...  # type: bool
-    check_circular = ...  # type: bool
-    allow_nan = ...  # type: bool
-    sort_keys = ...  # type: bool
-    indent = ...  # type: Optional[int]
+    item_separator: str
+    key_separator: str
+    skipkeys: bool
+    ensure_ascii: bool
+    check_circular: bool
+    allow_nan: bool
+    sort_keys: bool
+    indent: Optional[int]
 
     def __init__(self,
                  skipkeys: bool = ...,

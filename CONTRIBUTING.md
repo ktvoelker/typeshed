@@ -11,7 +11,8 @@ are important to the project's success.
 1. Read the [README.md file](README.md).
 2. Set up your environment to be able to [run all tests](README.md#running-the-tests).  They should pass.
 3. [Prepare your changes](#preparing-changes):
-    * [Contact us](#discussion) before starting significant work.
+    * Small fixes and additions can be submitted directly as pull requests,
+      but [contact us](#discussion) before starting significant work.
     * IMPORTANT: For new libraries, [get permission from the library owner first](#adding-a-new-library).
     * Create your stubs [conforming to the coding style](#stub-file-coding-style).
     * Make sure your tests pass cleanly on `mypy`, `pytype`, and `flake8`.
@@ -120,30 +121,33 @@ has more information).
 
 ### What to include
 
-Stubs should include all public objects (classes, functions, constants,
-etc.) in the module they cover. Omitting objects can confuse users,
-because users who see an error like "module X has no attribute Y" will
-not know whether the error appeared because their code had a bug or
-because the stub is wrong. If you are submitting stubs to typeshed and
-you are unable to provide fully typed stubs for some of the objects in
-the library, you can use stubgen (see below) to generate untyped stubs.
-Although we prefer having exact types for all stubs, such stubs are
-better than nothing.
+Stubs should include the complete interface (classes, functions,
+constants, etc.) of the module they cover, but it is not always
+clear exactly what is part of the interface.
 
-What counts as a "public object" is not always clear. Use your judgment,
-but objects that are listed in the module's documentation, that are
-included in ``__all__`` (if present), and whose names do not start with an
-underscore are more likely to merit inclusion in a stub. If in doubt, err
-on the side of including more objects.
+The following should always be included:
+- All objects listed in the module's documentation.
+- All objects included in ``__all__`` (if present).
 
-**NEW:** Sometimes it makes sense to include non-public objects
-in a stub.  Mark these with a comment of the form ``# undocumented``.
-See the [motivation](https://github.com/python/typeshed/issues/1902).
+Other objects may be included if they are being used in practice
+or if they are not prefixed with an underscore. This means
+that typeshed will generally accept contributions that add missing
+objects, even if they are undocumented. Undocumented objects should
+be marked with a comment of the form ``# undocumented``.
 Example:
 
 ```python
 def list2cmdline(seq: Sequence[str]) -> str: ...  # undocumented
 ```
+
+We accept such undocumented objects because omitting objects can confuse
+users. Users who see an error like "module X has no attribute Y" will
+not know whether the error appeared because their code had a bug or
+because the stub is wrong. Although it may also be helpful for a type
+checker to point out usage of private objects, we usually prefer false
+negatives (no errors for wrong code) over false positives (type errors
+for correct code). In addition, even for private objects a type checker
+can be helpful in pointing out that an incorrect type was used.
 
 ### Incomplete stubs
 
@@ -179,11 +183,12 @@ def bar(x: str, y, *, z=...): ...
 
 ### Using stubgen
 
-Mypy includes a tool called [stubgen](https://github.com/python/mypy/blob/master/mypy/stubgen.py)
-that you can use as a starting point for your stubs.  Note that this
-generator is currently unable to determine most argument and return
-types and omits them or uses ``Any`` in their place.  Fill out the types
-that you know.
+Mypy includes a tool called [stubgen](https://mypy.readthedocs.io/en/latest/stubgen.html)
+that auto-generates stubs for Python and C modules using static analysis,
+Sphinx docs, and runtime introspection.  It can be used to get a starting
+point for your stubs.  Note that this generator is currently unable to
+determine most argument and return types and omits them or uses ``Any`` in
+their place.  Fill out manually the types that you know.
 
 ### Stub file coding style
 
@@ -233,7 +238,7 @@ rule is that they should be as concise as possible.  Specifically:
 * use variable annotations instead of type comments, even for stubs
   that target older versions of Python;
 * for arguments with a type and a default, use spaces around the `=`.
-The code formatter [black](https://github.com/ambv/black) will format
+The code formatter [black](https://github.com/psf/black) will format
 stubs according to this standard.
 
 Stub files should only contain information necessary for the type
@@ -287,6 +292,15 @@ Type variables and aliases you introduce purely for legibility reasons
 should be prefixed with an underscore to make it obvious to the reader
 they are not part of the stubbed API.
 
+When adding type annotations for context manager classes, annotate
+the return type of `__exit__` as bool only if the context manager
+sometimes suppresses annotations -- if it sometimes returns `True`
+at runtime. If the context manager never suppresses exceptions,
+have the return type be either `None` or `Optional[bool]`. If you
+are not sure whether exceptions are suppressed or not or if the
+context manager is meant to be subclassed, pick `Optional[bool]`.
+See https://github.com/python/mypy/issues/7214 for more details.
+
 NOTE: there are stubs in this repository that don't conform to the
 style described above.  Fixing them is a great starting point for new
 contributors.
@@ -302,8 +316,8 @@ and optionally the lowest minor version, with the exception of the `2and3`
 directory which applies to both Python 2 and 3.
 
 For example, stubs in the `3` directory will be applied to all versions of
-Python 3, though stubs in the `3.6` directory will only be applied to versions
-3.6 and above. However, stubs in the `2` directory will not be applied to
+Python 3, though stubs in the `3.7` directory will only be applied to versions
+3.7 and above. However, stubs in the `2` directory will not be applied to
 Python 3.
 
 It is preferred to use a single stub in the more generic directory that
@@ -313,7 +327,7 @@ if the given library works on both Python 2 and Python 3, prefer to put your
 stubs in the `2and3` directory, unless the types are so different that the stubs
 become unreadable that way.
 
-You can use checks like `if sys.version_info >= (3, 4):` to denote new
+You can use checks like `if sys.version_info >= (3, 8):` to denote new
 functionality introduced in a given Python version or solve type
 differences.  When doing so, only use one-tuples or two-tuples.  This is
 because:
@@ -326,17 +340,17 @@ because:
   regardless of the micro version used.
 
 Because of this, if a given functionality was introduced in, say, Python
-3.4.4, your check:
+3.7.4, your check:
 
-* should be expressed as `if sys.version_info >= (3, 4):`
-* should NOT be expressed as `if sys.version_info >= (3, 4, 4):`
-* should NOT be expressed as `if sys.version_info >= (3, 5):`
+* should be expressed as `if sys.version_info >= (3, 7):`
+* should NOT be expressed as `if sys.version_info >= (3, 7, 4):`
+* should NOT be expressed as `if sys.version_info >= (3, 8):`
 
 This makes the type checker assume the functionality was also available
-in 3.4.0 - 3.4.3, which while *technically* incorrect is relatively
+in 3.7.0 - 3.7.3, which while *technically* incorrect is relatively
 harmless.  This is a strictly better compromise than using the latter
 two forms, which would generate false positive errors for correct use
-under Python 3.4.4.
+under Python 3.7.4.
 
 Note: in its current implementation, typeshed cannot contain stubs for
 multiple versions of the same third-party library.  Prefer to generate
