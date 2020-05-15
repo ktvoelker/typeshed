@@ -1,4 +1,11 @@
+import logging
 from typing import Any, Callable, Dict
+
+
+class JournalHandler(logging.Handler):
+
+    def __init__(self) -> None:
+        ...
 
 
 class Reader(Iterator[Dict[str, Any]]):
