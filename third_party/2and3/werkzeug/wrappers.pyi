@@ -22,10 +22,10 @@ class BaseRequest:
     encoding_errors: str
     max_content_length: Optional[int]
     max_form_memory_size: int
-    parameter_storage_class: Type
-    list_storage_class: Type
-    dict_storage_class: Type
-    form_data_parser_class: Type
+    parameter_storage_class: Type[Any]
+    list_storage_class: Type[Any]
+    dict_storage_class: Type[Any]
+    form_data_parser_class: Type[Any]
     trusted_hosts: Optional[Sequence[Text]]
     disable_data_descriptor: Any
     environ: WSGIEnvironment = ...
@@ -46,7 +46,7 @@ class BaseRequest:
     @property
     def stream(self) -> InputStream: ...
     input_stream: InputStream
-    args: ImmutableMultiDict
+    args: ImmutableMultiDict[Any, Any]
     @property
     def data(self) -> bytes: ...
     @overload
@@ -59,9 +59,9 @@ class BaseRequest:
     def get_data(self, cache: bool, as_text: bool, parse_form_data: bool = ...) -> Any: ...
     @overload
     def get_data(self, *, as_text: bool, parse_form_data: bool = ...) -> Any: ...
-    form: ImmutableMultiDict
-    values: CombinedMultiDict
-    files: MultiDict
+    form: ImmutableMultiDict[Any, Any]
+    values: CombinedMultiDict[Any, Any]
+    files: MultiDict[Any, Any]
     @property
     def cookies(self) -> ImmutableTypeConversionDict[str, str]: ...
     headers: EnvironHeaders
@@ -86,11 +86,6 @@ class BaseRequest:
     is_multithread: bool
     is_multiprocess: bool
     is_run_once: bool
-
-    # These are not preset at runtime but we add them since monkeypatching this
-    # class is quite common.
-    def __setattr__(self, name: str, value: Any): ...
-    def __getattr__(self, name: str): ...
 
 _OnCloseT = TypeVar('_OnCloseT', bound=Callable[[], Any])
 _SelfT = TypeVar('_SelfT', bound=BaseResponse)
@@ -132,7 +127,7 @@ class BaseResponse:
     def make_sequence(self) -> None: ...
     def iter_encoded(self) -> Iterator[bytes]: ...
     def set_cookie(self, key, value: str = ..., max_age: Optional[Any] = ..., expires: Optional[Any] = ...,
-                   path: str = ..., domain: Optional[Any] = ..., secure: bool = ..., httponly: bool = ...): ...
+                   path: str = ..., domain: Optional[Any] = ..., secure: bool = ..., httponly: bool = ..., samesite: Optional[str] = ...): ...
     def delete_cookie(self, key, path: str = ..., domain: Optional[Any] = ...): ...
     @property
     def is_streamed(self) -> bool: ...

@@ -1,7 +1,7 @@
 # Stubs for http.server (Python 3.4)
 
 import sys
-from typing import Any, BinaryIO, Dict, List, Mapping, Optional, Tuple, Union
+from typing import Any, BinaryIO, Callable, ClassVar, Dict, List, Mapping, Optional, Sequence, Tuple, Union
 import socketserver
 import email.message
 
@@ -12,9 +12,13 @@ class HTTPServer(socketserver.TCPServer):
     server_name: str
     server_port: int
     def __init__(self, server_address: Tuple[str, int],
-                 RequestHandlerClass: type) -> None: ...
+                 RequestHandlerClass: Callable[..., BaseHTTPRequestHandler]) -> None: ...
 
-class BaseHTTPRequestHandler:
+if sys.version_info >= (3, 7):
+    class ThreadingHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
+        daemon_threads: bool  # undocumented
+
+class BaseHTTPRequestHandler(socketserver.StreamRequestHandler):
     client_address: Tuple[str, int]
     server: socketserver.BaseServer
     close_connection: bool
@@ -23,8 +27,6 @@ class BaseHTTPRequestHandler:
     path: str
     request_version: str
     headers: email.message.Message
-    rfile: BinaryIO
-    wfile: BinaryIO
     server_version: str
     sys_version: str
     error_message_format: str
@@ -32,6 +34,8 @@ class BaseHTTPRequestHandler:
     protocol_version: str
     MessageClass: type
     responses: Mapping[int, Tuple[str, str]]
+    weekdayname: ClassVar[Sequence[str]] = ...  # Undocumented
+    monthname: ClassVar[Sequence[Optional[str]]] = ...  # Undocumented
     def __init__(self, request: bytes, client_address: Tuple[str, int],
                  server: socketserver.BaseServer) -> None: ...
     def handle(self) -> None: ...
@@ -54,6 +58,7 @@ class BaseHTTPRequestHandler:
     def date_time_string(self, timestamp: Optional[int] = ...) -> str: ...
     def log_date_time_string(self) -> str: ...
     def address_string(self) -> str: ...
+    def parse_request(self) -> bool: ...  # Undocumented
 
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
     extensions_map: Dict[str, str]

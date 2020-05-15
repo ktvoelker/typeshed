@@ -3,6 +3,9 @@ import typing
 from typing import Any, Optional, ClassVar
 
 PyCF_ONLY_AST: int
+if sys.version_info >= (3, 8):
+    PyCF_TYPE_COMMENTS: int
+    PyCF_ALLOW_TOP_LEVEL_AWAIT: int
 
 _identifier = str
 
@@ -206,7 +209,7 @@ class IfExp(expr):
     orelse: expr
 
 class Dict(expr):
-    keys: typing.List[expr]
+    keys: typing.List[Optional[expr]]
     values: typing.List[expr]
 
 class Set(expr):
@@ -248,12 +251,6 @@ class Call(expr):
     args: typing.List[expr]
     keywords: typing.List[keyword]
 
-class Num(expr):  # Deprecated in 3.8; use Constant
-    n: complex
-
-class Str(expr):  # Deprecated in 3.8; use Constant
-    s: str
-
 if sys.version_info >= (3, 6):
     class FormattedValue(expr):
         value: expr
@@ -263,11 +260,20 @@ if sys.version_info >= (3, 6):
     class JoinedStr(expr):
         values: typing.List[expr]
 
-class Bytes(expr):  # Deprecated in 3.8; use Constant
-    s: bytes
+if sys.version_info < (3, 8):
+    class Num(expr):  # Deprecated in 3.8; use Constant
+        n: complex
 
-class NameConstant(expr):
-    value: Any
+    class Str(expr):  # Deprecated in 3.8; use Constant
+        s: str
+
+    class Bytes(expr):  # Deprecated in 3.8; use Constant
+        s: bytes
+
+    class NameConstant(expr):  # Deprecated in 3.8; use Constant
+        value: Any
+
+    class Ellipsis(expr): ...  # Deprecated in 3.8; use Constant
 
 if sys.version_info >= (3, 6):
     class Constant(expr):
@@ -282,16 +288,19 @@ if sys.version_info >= (3, 8):
         target: expr
         value: expr
 
-class Ellipsis(expr): ...
-
 class Attribute(expr):
     value: expr
     attr: _identifier
     ctx: expr_context
 
+if sys.version_info >= (3, 9):
+    _SliceT = expr
+else:
+    _SliceT = _slice
+
 class Subscript(expr):
     value: expr
-    slice: _slice
+    slice: _SliceT
     ctx: expr_context
 
 class Starred(expr):
@@ -386,6 +395,8 @@ class ExceptHandler(excepthandler):
 
 
 class arguments(AST):
+    if sys.version_info >= (3, 8):
+        posonlyargs: typing.List[arg]
     args: typing.List[arg]
     vararg: Optional[arg]
     kwonlyargs: typing.List[arg]
